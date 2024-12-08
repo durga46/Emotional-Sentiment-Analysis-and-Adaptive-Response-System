@@ -1,4 +1,6 @@
 # Emotional-Sentiment-Analysis-and-Adaptive-Response-System
+main.py
+
 ```
 import pandas as pd
 import numpy as np
@@ -282,4 +284,55 @@ def main():
 
 if __name__ == "__main__":
     main()
+```
+app.py
+
+```
+
+import os
+import torch
+from flask import Flask, render_template, request, jsonify
+from sentiment_chatbot import EmotionalSentimentAnalysisChatbot
+
+app = Flask(__name__)
+
+# Initialize chatbot globally
+chatbot = EmotionalSentimentAnalysisChatbot()
+
+# Create and prepare sample dataset
+train_dataset, test_dataset = chatbot.create_sample_dataset()
+
+# Train sentiment model
+chatbot.train_sentiment_model(train_dataset, test_dataset)
+
+@app.route('/')
+def index():
+    """Render the main chat interface"""
+    return render_template('index.html')
+
+@app.route('/chat', methods=['POST'])
+def chat():
+    """Process user input and generate chatbot response"""
+    user_input = request.json.get('message', '')
+    
+    try:
+        # Detect emotion
+        emotion = chatbot.predict_emotion(user_input)
+        
+        # Generate response (using the existing method with one argument)
+        response = chatbot.generate_empathetic_response(emotion)
+        
+        return jsonify({
+            'input': user_input,
+            'detected_emotion': emotion,
+            'bot_response': response
+        })
+    
+    except Exception as e:
+        return jsonify({
+            'error': str(e)
+        }), 500
+
+if __name__ == '__main__':
+    app.run(debug=True)
 ```
